@@ -37,6 +37,8 @@ export interface StorageInfo {
   usageBytes: number | null;
   quotaBytes: number | null;
   persisted: boolean | null;
+  /** Whether this browser supports requesting persistent storage. */
+  canPersist: boolean;
   localStorageWorks: boolean;
 }
 
@@ -56,6 +58,7 @@ export async function getStorageInfo(): Promise<StorageInfo> {
     usageBytes: estimate?.usage ?? null,
     quotaBytes: estimate?.quota ?? null,
     persisted,
+    canPersist: typeof navigator.storage?.persist === "function",
     localStorageWorks,
   };
 }

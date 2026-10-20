@@ -86,7 +86,7 @@ export function OfflineSettingsPanel() {
           <dt className="text-foreground/70">Protected from automatic clearing</dt>
           <dd className="flex items-center gap-3">
             {storage?.persisted ? "Yes" : "No"}
-            {storage && !storage.persisted && navigator.storage?.persist && (
+            {storage?.canPersist && !storage.persisted && (
               <button
                 type="button"
                 onClick={requestPersistence}
