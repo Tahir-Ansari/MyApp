@@ -1,102 +1,235 @@
+"use client";
+
 import { useSyncExternalStore } from "react";
-import { getLessonEntry } from "@/lib/curriculum/catalog";
+import { ACHIEVEMENTS, isUnlocked } from "@/lib/achievements/definitions";
 import { toLocalDateKey } from "@/lib/utils";
-import { getUnlockedAchievementIds } from "./achievements";
-import { XP_REWARDS } from "./levels";
-import { EMPTY_PROGRESS, PROGRESS_STORAGE_KEY, parseProgress, type ProgressState } from "./state";
+import { levelInfo, quizPassMark, totalXp } from "./calculations";
+import { XP_REWARDS } from "./config";
+import { clearProgress, createEmptyProgress, loadProgress, onExternalChange, saveProgress } from "./storage";
+import type { ProgressState, Settings, StorageStatus } from "./types";
 
-/**
- * localStorage-backed progress store. Client-only at runtime; the server snapshot is the empty
- * state, so prerendered HTML and the first client render always show zero progress and hydrate
- * without mismatches, then update to the saved values.
- */
+/* ------------------------------------------------------------------ */
+/* Toasts: small, non-blocking feedback for XP and unlocks             */
+/* ------------------------------------------------------------------ */
 
-/** Fired in this tab after a write; the native "storage" event covers other tabs. */
-const CHANGE_EVENT = "dkq-progress-change";
+export interface Toast {
+  id: number;
+  kind: "xp" | "achievement" | "level" | "notice";
+  title: string;
+  detail?: string;
+}
 
-let cachedRaw: string | null | undefined;
-let cachedState: ProgressState = EMPTY_PROGRESS;
+let toasts: Toast[] = [];
+let toastSeq = 0;
+const toastListeners = new Set<() => void>();
+const emitToasts = () => toastListeners.forEach((l) => l());
 
-function readRaw(): string | null {
-  try {
-    return window.localStorage.getItem(PROGRESS_STORAGE_KEY);
-  } catch {
-    return null;
+export function pushToast(toast: Omit<Toast, "id">) {
+  const id = ++toastSeq;
+  toasts = [...toasts.slice(-3), { ...toast, id }];
+  emitToasts();
+  if (typeof window !== "undefined") window.setTimeout(() => dismissToast(id), toast.kind === "achievement" || toast.kind === "level" ? 5000 : 3200);
+}
+
+export function dismissToast(id: number) {
+  toasts = toasts.filter((t) => t.id !== id);
+  emitToasts();
+}
+
+const EMPTY_TOASTS: Toast[] = [];
+
+export function useToasts(): Toast[] {
+  return useSyncExternalStore(
+    (cb) => {
+      toastListeners.add(cb);
+      return () => toastListeners.delete(cb);
+    },
+    () => toasts,
+    () => EMPTY_TOASTS,
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Progress store                                                      */
+/* ------------------------------------------------------------------ */
+
+let progress: ProgressState | null = null;
+let storageStatus: StorageStatus = "ok";
+const listeners = new Set<() => void>();
+let unsubscribeExternal: (() => void) | null = null;
+
+function emit() {
+  listeners.forEach((l) => l());
+}
+
+function ensureLoaded() {
+  if (progress !== null || typeof window === "undefined") return;
+  const result = loadProgress();
+  progress = result.state;
+  storageStatus = result.status;
+  if (!unsubscribeExternal) {
+    unsubscribeExternal = onExternalChange(() => {
+      const reloaded = loadProgress();
+      progress = reloaded.state;
+      emit();
+    });
   }
 }
 
-function getSnapshot(): ProgressState {
-  const raw = readRaw();
-  if (raw !== cachedRaw) {
-    cachedRaw = raw;
-    cachedState = parseProgress(raw);
-  }
-  return cachedState;
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
 }
 
-function getServerSnapshot(): ProgressState {
-  return EMPTY_PROGRESS;
+function getSnapshot(): ProgressState | null {
+  ensureLoaded();
+  return progress;
 }
 
-function subscribe(onChange: () => void): () => void {
-  const onStorage = (event: StorageEvent) => {
-    if (event.key === null || event.key === PROGRESS_STORAGE_KEY) onChange();
-  };
-  window.addEventListener("storage", onStorage);
-  window.addEventListener(CHANGE_EVENT, onChange);
-  return () => {
-    window.removeEventListener("storage", onStorage);
-    window.removeEventListener(CHANGE_EVENT, onChange);
-  };
-}
+const getServerSnapshot = () => null;
 
-/** Current saved progress. Use only in client components. */
-export function useProgress(): ProgressState {
+/** Returns null during server render and hydration, then the saved progress. */
+export function useProgress(): ProgressState | null {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
-/** Persists progress. Returns false when storage is unavailable (private mode, quota, blocked). */
-export function writeProgress(state: ProgressState): boolean {
-  try {
-    window.localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    return false;
+export function useStorageStatus(): StorageStatus | null {
+  return useSyncExternalStore(
+    subscribe,
+    () => {
+      ensureLoaded();
+      return storageStatus;
+    },
+    () => null,
+  );
+}
+
+/** Applies a change, checks achievements and level-ups, persists, and notifies subscribers. */
+function commit(mutate: (draft: ProgressState, now: Date) => void) {
+  ensureLoaded();
+  const before = progress ?? createEmptyProgress();
+  const draft = structuredClone(before);
+  const now = new Date();
+  mutate(draft, now);
+
+  for (const def of ACHIEVEMENTS) {
+    if (!draft.achievements[def.id] && isUnlocked(def, draft)) {
+      draft.achievements[def.id] = now.toISOString();
+      pushToast({ kind: "achievement", title: `Achievement unlocked: ${def.title}`, detail: def.description });
+    }
   }
-  window.dispatchEvent(new Event(CHANGE_EVENT));
+  const oldLevel = levelInfo(totalXp(before)).current.level;
+  const newLevel = levelInfo(totalXp(draft));
+  if (newLevel.current.level > oldLevel) {
+    pushToast({ kind: "level", title: `Level ${newLevel.current.level}: ${newLevel.current.title}`, detail: "You reached a new level." });
+  }
+
+  progress = draft;
+  const saved = saveProgress(draft);
+  if (!saved && storageStatus !== "unavailable") {
+    storageStatus = "unavailable";
+  }
+  emit();
+}
+
+function award(draft: ProgressState, now: Date, key: string, amount: number, label: string): boolean {
+  if (draft.awards[key]) return false;
+  draft.awards[key] = { key, amount, label, at: now.toISOString() };
+  markActive(draft, now);
+  pushToast({ kind: "xp", title: `+${amount} XP`, detail: label });
   return true;
 }
 
-/** Removes all saved progress on this device. */
-export function resetProgress(): boolean {
-  try {
-    window.localStorage.removeItem(PROGRESS_STORAGE_KEY);
-  } catch {
-    return false;
-  }
-  window.dispatchEvent(new Event(CHANGE_EVENT));
-  return true;
+function markActive(draft: ProgressState, now: Date) {
+  const day = toLocalDateKey(now);
+  if (!draft.activeDays.includes(day)) draft.activeDays.push(day);
 }
 
-/**
- * Pure: returns progress with a lesson marked complete. Awards lesson XP only on first completion,
- * records today's local date as an activity day, and records newly derivable achievements.
- * Not wired to any UI yet; the lesson player will call it.
- */
-export function applyLessonCompletion(
-  progress: ProgressState,
-  slug: string,
-  now: Date = new Date(),
-): ProgressState {
-  if (!getLessonEntry(slug) || progress.completedLessons.includes(slug)) return progress;
-  const today = toLocalDateKey(now);
-  const next: ProgressState = {
-    ...progress,
-    xp: progress.xp + XP_REWARDS.lesson,
-    completedLessons: [...progress.completedLessons, slug],
-    activityDays: progress.activityDays.includes(today)
-      ? progress.activityDays
-      : [...progress.activityDays, today].sort(),
-  };
-  const unlocked = new Set([...next.unlockedAchievements, ...getUnlockedAchievementIds(next)]);
-  return { ...next, unlockedAchievements: [...unlocked] };
+/* ------------------------------------------------------------------ */
+/* Actions                                                             */
+/* ------------------------------------------------------------------ */
+
+export function completeActivity(slug: string) {
+  commit((draft, now) => {
+    if (!draft.activities[slug]) draft.activities[slug] = now.toISOString();
+    markActive(draft, now);
+  });
+}
+
+/** Records a quiz attempt. Bonus XP is awarded only the first time a pass / perfect score happens. */
+export function recordQuizAttempt(slug: string, lessonTitle: string, score: number, total: number) {
+  commit((draft, now) => {
+    const passed = score >= quizPassMark(total);
+    const perfect = score === total;
+    const prev = draft.quizzes[slug];
+    draft.quizzes[slug] = {
+      bestScore: Math.max(prev?.bestScore ?? 0, score),
+      total,
+      attempts: (prev?.attempts ?? 0) + 1,
+      passed: (prev?.passed ?? false) || passed,
+      perfect: (prev?.perfect ?? false) || perfect,
+    };
+    if (passed) award(draft, now, `quiz-pass:${slug}`, XP_REWARDS.quizPass, `Passed the quiz: ${lessonTitle}`);
+    if (perfect) award(draft, now, `quiz-perfect:${slug}`, XP_REWARDS.quizPerfect, `Perfect score: ${lessonTitle}`);
+    markActive(draft, now);
+  });
+}
+
+export function completeLesson(slug: string, lessonTitle: string) {
+  commit((draft, now) => {
+    if (!draft.lessons[slug]) {
+      draft.lessons[slug] = { completedAt: now.toISOString(), localDate: toLocalDateKey(now) };
+    }
+    award(draft, now, `lesson:${slug}`, XP_REWARDS.lessonComplete, `Lesson complete: ${lessonTitle}`);
+  });
+}
+
+export function startChallenge(id: string) {
+  commit((draft, now) => {
+    if (!draft.challenges[id]) draft.challenges[id] = { status: "in-progress", startedAt: now.toISOString(), attempts: 0 };
+  });
+}
+
+export function recordChallengeAttempt(id: string) {
+  commit((draft, now) => {
+    const rec = draft.challenges[id] ?? { status: "in-progress" as const, startedAt: now.toISOString(), attempts: 0 };
+    rec.attempts += 1;
+    draft.challenges[id] = rec;
+  });
+}
+
+export function completeChallenge(id: string, title: string) {
+  commit((draft, now) => {
+    const rec = draft.challenges[id] ?? { status: "in-progress" as const, startedAt: now.toISOString(), attempts: 0 };
+    if (rec.status !== "completed") {
+      rec.status = "completed";
+      rec.completedAt = now.toISOString();
+    }
+    draft.challenges[id] = rec;
+    award(draft, now, `challenge:${id}`, XP_REWARDS.challengeComplete, `Challenge complete: ${title}`);
+  });
+}
+
+export function recordPlaygroundCommand() {
+  commit((draft, now) => {
+    draft.playgroundCommands += 1;
+    markActive(draft, now);
+  });
+}
+
+export function updateSettings(patch: Partial<Settings>) {
+  commit((draft) => {
+    draft.settings = { ...draft.settings, ...patch };
+  });
+}
+
+export function resetProgress() {
+  ensureLoaded();
+  const settings = progress?.settings ?? createEmptyProgress().settings;
+  clearProgress();
+  progress = { ...createEmptyProgress(), settings };
+  const saved = saveProgress(progress);
+  storageStatus = saved ? "ok" : "unavailable";
+  emit();
+  pushToast({ kind: "notice", title: "Progress reset", detail: "You are starting fresh." });
 }

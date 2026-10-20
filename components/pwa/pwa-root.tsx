@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { Wifi, WifiOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useAppUpdateBlocked } from "./activity-guard";
 import { getPwaState, getServerPwaState, setPwaState, subscribePwa } from "./pwa-store";
 
@@ -150,46 +153,43 @@ function ConnectionBanner() {
   const { online, backOnline } = usePwaState();
   if (online && !backOnline) return null;
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex justify-center px-4 pt-[max(0.5rem,env(safe-area-inset-top))]">
-      <div
-        role="status"
-        aria-live="polite"
-        className={`pointer-events-auto flex max-w-md items-center gap-2 rounded-full border px-4 py-2 text-sm shadow-lg ${
-          online
-            ? "border-emerald-500/40 bg-emerald-950/90 text-emerald-100"
-            : "border-amber-500/40 bg-amber-950/90 text-amber-100"
-        }`}
-      >
-        <span aria-hidden className={`size-2 shrink-0 rounded-full ${online ? "bg-emerald-400" : "bg-amber-400"}`} />
-        {online ? (
+    <div
+      role="status"
+      aria-live="polite"
+      className={cn(
+        "pointer-events-auto flex w-full items-center gap-2.5 rounded-lg border bg-surface-2 px-4 py-2.5 text-sm text-foreground shadow-card",
+        online ? "border-success/30" : "border-warning/30",
+      )}
+    >
+      {online ? (
+        <>
+          <Wifi aria-hidden className="size-4 shrink-0 text-success" />
           <span>Back online.</span>
-        ) : (
+        </>
+      ) : (
+        <>
+          <WifiOff aria-hidden className="size-4 shrink-0 text-warning" />
           <span>
             <strong className="font-semibold">Offline.</strong> Saved lessons still work, and progress saves on this
             device.
           </span>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 }
 
 function Toast({ children }: { children: React.ReactNode }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[60] flex justify-center px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-6">
-      <div
-        role="status"
-        aria-live="polite"
-        className="flex w-full max-w-md flex-wrap items-center gap-3 rounded-xl border border-border bg-background p-4 text-sm text-foreground shadow-2xl"
-      >
-        {children}
-      </div>
+    <div
+      role="status"
+      aria-live="polite"
+      className="pointer-events-auto flex w-full flex-wrap items-center gap-3 rounded-xl border border-border bg-surface-2 p-4 text-sm text-foreground shadow-card"
+    >
+      {children}
     </div>
   );
 }
-
-const btn =
-  "min-h-11 rounded-lg px-4 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400";
 
 function UpdateToast() {
   const { updateReady, offlineReadyJustNow } = usePwaState();
@@ -204,17 +204,13 @@ function UpdateToast() {
           is kept.
         </p>
         <div className="flex gap-2">
-          <button
-            type="button"
-            className={`${btn} text-foreground/70 hover:text-foreground`}
-            // The waiting worker also activates on its own once every tab/window of the app is closed.
-            onClick={() => setDismissed(true)}
-          >
+          {/* The waiting worker also activates on its own once every tab/window of the app is closed. */}
+          <Button variant="ghost" className="min-h-11" onClick={() => setDismissed(true)}>
             Later
-          </button>
-          <button type="button" className={`${btn} bg-indigo-500 text-white hover:bg-indigo-400`} onClick={applyUpdate}>
+          </Button>
+          <Button className="min-h-11" onClick={applyUpdate}>
             Refresh
-          </button>
+          </Button>
         </div>
       </Toast>
     );
@@ -226,13 +222,9 @@ function UpdateToast() {
           <strong className="font-semibold">Ready for offline learning.</strong> Lessons, quizzes, the glossary and the
           terminal now work without a connection.
         </p>
-        <button
-          type="button"
-          className={`${btn} bg-indigo-500 text-white hover:bg-indigo-400`}
-          onClick={() => setPwaState({ offlineReadyJustNow: false })}
-        >
+        <Button variant="secondary" className="min-h-11" onClick={() => setPwaState({ offlineReadyJustNow: false })}>
           Got it
-        </button>
+        </Button>
       </Toast>
     );
   }
@@ -243,10 +235,15 @@ function UpdateToast() {
 export function PwaRoot() {
   useServiceWorker();
   useConnectivity();
+  // One stacked region so the banner and update notices never overlap each other. The app's XP toaster owns the
+  // bottom-right (and the full bottom on phones), so these sit just under the mobile top bar, and bottom-left
+  // beside the sidebar on desktop.
   return (
-    <>
-      <ConnectionBanner />
-      <UpdateToast />
-    </>
+    <div className="pointer-events-none fixed inset-x-0 top-[calc(3.5rem+env(safe-area-inset-top)+0.5rem)] z-[45] flex justify-center px-4 lg:inset-x-auto lg:top-auto lg:bottom-4 lg:left-[calc(16rem+1rem)] lg:px-0">
+      <div className="flex w-full max-w-md flex-col gap-2 lg:w-[min(24rem,calc(100vw-16rem-25rem))]">
+        <ConnectionBanner />
+        <UpdateToast />
+      </div>
+    </div>
   );
 }

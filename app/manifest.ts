@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
-// Keep in sync with the dark background token in globals.css so the launch splash matches the app.
-const NAVY = "#0b1020";
+// Keep in sync with --background in globals.css so the launch splash matches the app.
+const BACKGROUND = "#080b08";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -15,8 +15,8 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     display_override: ["standalone", "minimal-ui"],
     orientation: "any",
-    background_color: NAVY,
-    theme_color: NAVY,
+    background_color: BACKGROUND,
+    theme_color: BACKGROUND,
     categories: ["education", "developer", "productivity"],
     lang: "en",
     dir: "ltr",

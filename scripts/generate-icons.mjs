@@ -7,29 +7,33 @@ import sharp from "sharp";
 
 const outDir = path.join(process.cwd(), "public", "icons");
 
-// Artwork drawn on a 512 grid. `inset` shrinks the glyph so maskable icons keep it inside the 80% safe zone.
-function glyph(inset) {
-  const s = (512 - inset * 2) / 512;
-  return `
-  <g transform="translate(${inset} ${inset}) scale(${s})">
-    <path d="M256 70 L417 163 L417 349 L256 442 L95 349 L95 163 Z" fill="none" stroke="#8b9cff" stroke-width="22" stroke-linejoin="round" opacity="0.9"/>
-    <rect x="166" y="196" width="180" height="44" rx="10" fill="#6d7dff"/>
-    <rect x="166" y="252" width="180" height="44" rx="10" fill="#8b6dff"/>
-    <rect x="166" y="308" width="180" height="44" rx="10" fill="#34d399"/>
-    <g fill="#0b1020" opacity="0.35">
-      <rect x="196" y="206" width="8" height="24" rx="3"/><rect x="226" y="206" width="8" height="24" rx="3"/><rect x="256" y="206" width="8" height="24" rx="3"/><rect x="286" y="206" width="8" height="24" rx="3"/>
-      <rect x="196" y="262" width="8" height="24" rx="3"/><rect x="226" y="262" width="8" height="24" rx="3"/><rect x="256" y="262" width="8" height="24" rx="3"/><rect x="286" y="262" width="8" height="24" rx="3"/>
-      <rect x="196" y="318" width="8" height="24" rx="3"/><rect x="226" y="318" width="8" height="24" rx="3"/><rect x="256" y="318" width="8" height="24" rx="3"/><rect x="286" y="318" width="8" height="24" rx="3"/>
-    </g>
-  </g>`;
+// Same mark as the sidebar logo (docs/design-system.md §5): lucide "Container" in accent-strong
+// on an accent-soft tile with an accent-border outline, on the app background.
+const BG = "#080b08";
+const TILE = "#0b170e"; // accent-soft (rgb(34 197 94 / 0.1)) composited over BG
+const BORDER = "#1d4a2b"; // accent-border (rgb(74 222 128 / 0.28)) composited over TILE
+const GREEN = "#4ade80"; // accent-strong
+
+// lucide-react 1.60 `container` icon, 24×24 grid, stroke-width 2.
+const CONTAINER_PATHS = [
+  "M22 7.7c0-.6-.4-1.2-.8-1.5l-6.3-3.9a1.72 1.72 0 0 0-1.7 0l-10.3 6c-.5.2-.9.8-.9 1.4v6.6c0 .5.4 1.2.8 1.5l6.3 3.9a1.72 1.72 0 0 0 1.7 0l10.3-6c.5-.3.9-1 .9-1.5Z",
+  "M10 21.9V14L2.1 9.1",
+  "m10 14 11.9-6.9",
+  "M14 19.8v-8.1",
+  "M18 17.5V9.4",
+];
+
+/** Glyph centred in the 512 canvas, `size` px wide. */
+function glyph(size) {
+  const s = size / 24;
+  const o = (512 - size) / 2;
+  return `<g transform="translate(${o} ${o}) scale(${s})" fill="none" stroke="${GREEN}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${CONTAINER_PATHS.map((d) => `<path d="${d}"/>`).join("")}</g>`;
 }
 
-const defs = `<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#151b38"/><stop offset="1" stop-color="#0b1020"/></linearGradient></defs>`;
-
-// "any" purpose: rounded tile with transparent corners.
-const anySvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">${defs}<rect width="512" height="512" rx="112" fill="url(#bg)"/>${glyph(28)}</svg>`;
-// "maskable" purpose: full-bleed background, glyph within the central safe zone.
-const maskableSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">${defs}<rect width="512" height="512" fill="url(#bg)"/>${glyph(92)}</svg>`;
+// "any" purpose: rounded tile with transparent corners, like the sidebar logo square.
+const anySvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect x="8" y="8" width="496" height="496" rx="112" fill="${TILE}" stroke="${BORDER}" stroke-width="16"/>${glyph(300)}</svg>`;
+// "maskable" purpose: full-bleed background; glyph kept well inside the central 80% safe zone.
+const maskableSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="${BG}"/><rect x="96" y="96" width="320" height="320" rx="72" fill="${TILE}" stroke="${BORDER}" stroke-width="10"/>${glyph(200)}</svg>`;
 
 const outputs = [
   ["icon-192.png", anySvg, 192],

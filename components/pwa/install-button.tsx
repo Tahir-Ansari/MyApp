@@ -1,6 +1,9 @@
 "use client";
 
 import { useId, useState, useSyncExternalStore } from "react";
+import { Download, Share } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { usePwaState } from "./pwa-root";
 import { setPwaState } from "./pwa-store";
 
@@ -25,7 +28,7 @@ interface InstallButtonProps {
  * Shows "Install app" only when the browser offers an install prompt (Chromium on Android/desktop),
  * or "Add to Home Screen" instructions on iOS Safari. Renders nothing when installed or unsupported.
  */
-export function InstallButton({ className = "", variant = "compact" }: InstallButtonProps) {
+export function InstallButton({ className, variant = "compact" }: InstallButtonProps) {
   const { installEvent, installed, standalone } = usePwaState();
   const platform = useSyncExternalStore<Platform | null>(noopSubscribe, detectPlatform, () => null);
   const [showIosHelp, setShowIosHelp] = useState(false);
@@ -33,9 +36,6 @@ export function InstallButton({ className = "", variant = "compact" }: InstallBu
 
   if (standalone || installed || platform === null) return null;
   if (!installEvent && platform !== "ios") return null;
-
-  const base =
-    "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border px-3 text-sm font-medium text-foreground hover:bg-foreground/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400";
 
   async function install() {
     if (!installEvent) {
@@ -53,35 +53,35 @@ export function InstallButton({ className = "", variant = "compact" }: InstallBu
   }
 
   return (
-    <div className={`relative ${className}`}>
-      <button
-        type="button"
+    <div className={cn("relative", className)}>
+      <Button
+        variant="secondary"
+        className="min-h-11"
         onClick={install}
-        className={base}
         aria-expanded={platform === "ios" ? showIosHelp : undefined}
         aria-controls={platform === "ios" ? helpId : undefined}
       >
-        <svg aria-hidden viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14" />
-        </svg>
+        <Download aria-hidden />
         {variant === "full" ? "Install DevOps Quest" : "Install app"}
-      </button>
+      </Button>
       {platform === "ios" && showIosHelp && (
         <div
           id={helpId}
-          className="absolute right-0 z-50 mt-2 w-72 rounded-xl border border-border bg-background p-4 text-sm text-foreground shadow-2xl"
+          className="absolute right-0 z-50 mt-2 w-72 rounded-xl border border-border bg-background-2 p-4 text-sm text-foreground shadow-card"
         >
           <p className="font-semibold">Install on iPhone or iPad</p>
-          <ol className="mt-2 list-decimal space-y-1 pl-5 text-foreground/80">
+          <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted">
             <li>Open this page in Safari.</li>
             <li>
-              Tap <strong>Share</strong> (the square with an arrow).
+              Tap <strong className="font-medium text-foreground">Share</strong>{" "}
+              <Share aria-label="share icon" className="inline size-4 align-text-bottom" />.
             </li>
             <li>
-              Choose <strong>Add to Home Screen</strong>, then <strong>Add</strong>.
+              Choose <strong className="font-medium text-foreground">Add to Home Screen</strong>, then{" "}
+              <strong className="font-medium text-foreground">Add</strong>.
             </li>
           </ol>
-          <p className="mt-2 text-foreground/60">Progress stays on this device and does not sync to others.</p>
+          <p className="mt-2 text-xs text-subtle">Progress is saved on this device and doesn&apos;t sync to others.</p>
         </div>
       )}
     </div>

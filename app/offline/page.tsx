@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { WifiOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { OfflinePagesList } from "@/components/pwa/offline-pages-list";
 import { RetryButton } from "@/components/pwa/retry-button";
 
@@ -11,19 +14,26 @@ export const metadata: Metadata = {
 // Served by the service worker when a page that was never cached is requested without a connection.
 export default function OfflinePage() {
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-10 pb-[calc(6rem+env(safe-area-inset-bottom))]">
-      <p className="text-sm font-medium text-amber-300">Offline</p>
-      <h1 className="mt-1 text-2xl font-semibold tracking-tight">This page isn&apos;t saved on this device yet</h1>
-      <p className="mt-3 text-foreground/75">
-        You can keep learning with the lessons, quizzes, glossary and simulated terminal saved below. Your XP and
-        progress keep saving on this device while you&apos;re offline.
-      </p>
-      <div className="mt-5">
-        <RetryButton />
-      </div>
-      <div className="mt-8">
-        <OfflinePagesList />
-      </div>
-    </main>
+    <div className="mx-auto w-full max-w-2xl space-y-8">
+      <header>
+        <p className="mb-2 flex items-center gap-2 font-mono text-xs font-medium uppercase tracking-[0.14em] text-warning">
+          <WifiOff aria-hidden className="size-4" />
+          Offline
+        </p>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">This page isn&apos;t saved on this device yet</h1>
+        <p className="mt-2 text-sm leading-6 text-muted sm:text-base">
+          You can keep learning with the pages saved below: lessons, quizzes, the glossary and the simulated terminal
+          all work offline. XP and progress keep saving on this device.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <RetryButton />
+          <Button asChild variant="secondary" className="min-h-11">
+            {/* Offline, a failed soft navigation falls back to a full load, which the service worker serves from cache. */}
+            <Link href="/">Go to dashboard</Link>
+          </Button>
+        </div>
+      </header>
+      <OfflinePagesList />
+    </div>
   );
 }

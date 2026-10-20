@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BookOpen, ChevronRight, LayoutGrid } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { listCachedPages, type CachedPage } from "./cache-info";
 
 /** Lists pages that are genuinely in the offline cache, using plain links so navigation is served by the service worker. */
@@ -13,53 +15,41 @@ export function OfflinePagesList() {
       .catch(() => setPages([]));
   }, []);
 
-  if (pages === null) return <p className="text-foreground/60">Checking saved pages…</p>;
+  if (pages === null) return <p className="text-sm text-muted">Checking saved pages…</p>;
   if (pages.length === 0) {
     return (
-      <p className="text-foreground/70">
-        No pages are saved on this device yet. Open the app once while online and it will save lessons for offline use.
-      </p>
+      <Card className="bg-grid p-4 sm:p-5">
+        <p className="font-medium">No pages saved on this device yet</p>
+        <p className="mt-1 text-sm text-muted">Open the app once while online and it will save lessons for offline use.</p>
+      </Card>
     );
   }
 
-  const core = pages.filter((p) => !p.path.startsWith("/lesson/"));
-  const lessons = pages.filter((p) => p.path.startsWith("/lesson/"));
-  const link =
-    "flex min-h-11 items-center rounded-lg border border-border px-3 text-sm hover:bg-foreground/5 focus-visible:outline-2 focus-visible:outline-indigo-400";
+  // App sections first, then lessons.
+  const sorted = [...pages.filter((p) => !p.path.startsWith("/lesson/")), ...pages.filter((p) => p.path.startsWith("/lesson/"))];
 
   return (
-    <div className="space-y-6">
-      <section aria-labelledby="offline-core">
-        <h2 id="offline-core" className="text-sm font-semibold uppercase tracking-wide text-foreground/60">
-          Available offline
-        </h2>
-        <ul className="mt-2 grid gap-2 sm:grid-cols-2">
-          {core.map((p) => (
-            <li key={p.path}>
-              {/* Plain <a>: a full navigation is answered from the cache while offline. */}
-              <a href={p.path} className={link}>
-                {p.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
-      {lessons.length > 0 && (
-        <details className="rounded-lg border border-border p-3">
-          <summary className="min-h-11 cursor-pointer content-center text-sm font-medium">
-            {lessons.length} saved lessons
-          </summary>
-          <ul className="mt-2 grid gap-2 sm:grid-cols-2">
-            {lessons.map((p) => (
+    <section aria-labelledby="offline-saved">
+      <h2 id="offline-saved" className="mb-3 text-base font-semibold tracking-tight">
+        Saved on this device <span className="font-mono text-xs font-normal text-muted">({pages.length})</span>
+      </h2>
+      <Card>
+        <ul className="divide-y divide-border">
+          {sorted.map((p) => {
+            const Icon = p.path.startsWith("/lesson/") ? BookOpen : LayoutGrid;
+            return (
               <li key={p.path}>
-                <a href={p.path} className={link}>
-                  {p.label}
+                {/* Plain <a>: a full navigation is answered from the cache while offline. */}
+                <a href={p.path} className="flex min-h-11 items-center gap-3 px-4 py-2.5 text-sm hover:bg-surface-2">
+                  <Icon aria-hidden className="size-4 shrink-0 text-subtle" />
+                  <span className="min-w-0 flex-1 truncate">{p.label}</span>
+                  <ChevronRight aria-hidden className="size-4 shrink-0 text-subtle" />
                 </a>
               </li>
-            ))}
-          </ul>
-        </details>
-      )}
-    </div>
+            );
+          })}
+        </ul>
+      </Card>
+    </section>
   );
 }
