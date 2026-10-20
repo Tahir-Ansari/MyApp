@@ -21,6 +21,8 @@ export interface PwaState {
   online: boolean;
   /** Set briefly after connectivity returns. */
   backOnline: boolean;
+  /** The learner hid the offline banner. In memory only; cleared when the connection returns. */
+  offlineDismissed: boolean;
   installEvent: BeforeInstallPromptEvent | null;
   installed: boolean;
   standalone: boolean;
@@ -33,6 +35,7 @@ const serverState: PwaState = {
   offlineReadyJustNow: false,
   online: true,
   backOnline: false,
+  offlineDismissed: false,
   installEvent: null,
   installed: false,
   standalone: false,

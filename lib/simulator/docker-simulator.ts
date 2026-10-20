@@ -1,6 +1,6 @@
 import { hashString } from "@/lib/utils";
 import { formatTable, normalizeCommand, parseArgs, tokenize } from "./command-parser";
-import { type CommandResult, type OutputLine, err, info, muted, out, success } from "./types";
+import { type CommandResult, type OutputLine, err, info, muted, out } from "./types";
 
 /* ------------------------------------------------------------------ */
 /* State model                                                         */

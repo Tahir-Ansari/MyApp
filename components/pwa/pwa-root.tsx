@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { Wifi, WifiOff } from "lucide-react";
+import { Wifi, WifiOff, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAppUpdateBlocked } from "./activity-guard";
@@ -33,7 +33,7 @@ function useConnectivity() {
       clearInterval(probeTimer);
       probeTimer = undefined;
       if (!getPwaState().online) {
-        setPwaState({ online: true, backOnline: true });
+        setPwaState({ online: true, backOnline: true, offlineDismissed: false });
         clearTimeout(backTimer);
         backTimer = setTimeout(() => setPwaState({ backOnline: false }), 4000);
       }
@@ -150,15 +150,16 @@ async function applyUpdate() {
 }
 
 function ConnectionBanner() {
-  const { online, backOnline } = usePwaState();
+  const { online, backOnline, offlineDismissed } = usePwaState();
   if (online && !backOnline) return null;
+  if (!online && offlineDismissed) return null;
   return (
     <div
       role="status"
       aria-live="polite"
       className={cn(
-        "pointer-events-auto flex w-full items-center gap-2.5 rounded-lg border bg-surface-2 px-4 py-2.5 text-sm text-foreground shadow-card",
-        online ? "border-success/30" : "border-warning/30",
+        "pointer-events-auto flex w-full items-center gap-2.5 rounded-xl border bg-surface-2 py-1 pl-4 text-sm text-foreground shadow-card",
+        online ? "border-success/30 pr-4 py-2.5" : "border-warning/30 pr-1",
       )}
     >
       {online ? (
@@ -169,10 +170,19 @@ function ConnectionBanner() {
       ) : (
         <>
           <WifiOff aria-hidden className="size-4 shrink-0 text-warning" />
-          <span>
+          <span className="min-w-0 flex-1">
             <strong className="font-semibold">Offline.</strong> Saved lessons still work, and progress saves on this
             device.
           </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Dismiss offline notice"
+            className="min-h-11 min-w-11 shrink-0"
+            onClick={() => setPwaState({ offlineDismissed: true })}
+          >
+            <X aria-hidden />
+          </Button>
         </>
       )}
     </div>
