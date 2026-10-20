@@ -5,8 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node scripts/generate-sw.mjs",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.3.1",

@@ -12,6 +12,7 @@ import { SidebarLevel } from "./sidebar-level";
 import { Toaster } from "./toaster";
 import { StorageNotice } from "./storage-notice";
 import { MotionPreferences } from "./motion-preferences";
+import { InstallButton } from "@/components/pwa/install-button";
 
 function Logo() {
   return (
@@ -83,6 +84,8 @@ function MobileTopBar() {
     <header className="pt-safe sticky top-0 z-40 border-b border-border bg-background-2/90 backdrop-blur lg:hidden">
       <div className="flex h-14 items-center justify-between px-4">
         <Logo />
+        <div className="flex items-center gap-1">
+        <InstallButton />
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button variant="ghost" size="icon" aria-label="Open navigation menu">
@@ -101,6 +104,7 @@ function MobileTopBar() {
             <SidebarFooter />
           </DialogContent>
         </Dialog>
+        </div>
       </div>
     </header>
   );

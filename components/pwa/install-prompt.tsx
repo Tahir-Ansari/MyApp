@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useId, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useState } from "react";
 import { Download, Share, SquarePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAppUpdateBlocked } from "./activity-guard";
+import { usePlatform } from "./platform";
 import { usePwaState } from "./pwa-root";
 import { setPwaState } from "./pwa-store";
 
@@ -11,17 +13,6 @@ const SHOW_DELAY_MS = 4000;
 /** "Not now" hides the prompt for this long. */
 const SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
 const SNOOZE_KEY = "dkq-install-prompt-snoozed-until";
-
-type Platform = "ios" | "other";
-
-function detectPlatform(): Platform {
-  const ua = navigator.userAgent;
-  // iPadOS reports itself as Mac; touch support tells them apart.
-  const isIos = /iPad|iPhone|iPod/.test(ua) || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1);
-  return isIos ? "ios" : "other";
-}
-
-const noopSubscribe = () => () => {};
 
 function isSnoozed(): boolean {
   try {
@@ -46,8 +37,9 @@ function snooze() {
  * and for 7 days after "Not now". Render inside PwaRoot's notice stack.
  */
 export function InstallPrompt() {
-  const { installEvent, installed, standalone, updateReady, offlineReadyJustNow } = usePwaState();
-  const platform = useSyncExternalStore<Platform | null>(noopSubscribe, detectPlatform, () => null);
+  const { installEvent, installed, standalone, updateReady, offlineReadyJustNow, online } = usePwaState();
+  const platform = usePlatform();
+  const midActivity = useAppUpdateBlocked();
   const [ready, setReady] = useState(false);
   const [closed, setClosed] = useState(false);
   const [showIosSteps, setShowIosSteps] = useState(false);
@@ -62,8 +54,10 @@ export function InstallPrompt() {
 
   const canInstall = Boolean(installEvent) || platform === "ios";
   if (!ready || closed || standalone || installed || !canInstall) return null;
-  // One system notice at a time: update and offline-ready notices take priority.
-  if (updateReady || offlineReadyJustNow) return null;
+  // One system notice at a time: offline, update and offline-ready notices take priority.
+  if (!online || updateReady || offlineReadyJustNow) return null;
+  // Never interrupt a quiz, challenge or terminal session.
+  if (midActivity) return null;
 
   function dismiss() {
     snooze();

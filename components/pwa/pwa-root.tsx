@@ -5,6 +5,7 @@ import { Wifi, WifiOff, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAppUpdateBlocked } from "./activity-guard";
+import { InstallPrompt } from "./install-prompt";
 import { getPwaState, getServerPwaState, setPwaState, subscribePwa } from "./pwa-store";
 
 export function usePwaState() {
@@ -253,6 +254,7 @@ export function PwaRoot() {
       <div className="flex w-full max-w-md flex-col gap-2 lg:w-[min(24rem,calc(100vw-16rem-25rem))]">
         <ConnectionBanner />
         <UpdateToast />
+        <InstallPrompt />
       </div>
     </div>
   );

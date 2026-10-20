@@ -1,22 +1,12 @@
 "use client";
 
-import { useId, useState, useSyncExternalStore } from "react";
+import { useId, useState } from "react";
 import { Download, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { usePlatform } from "./platform";
 import { usePwaState } from "./pwa-root";
 import { setPwaState } from "./pwa-store";
-
-type Platform = "ios" | "other";
-
-function detectPlatform(): Platform {
-  const ua = navigator.userAgent;
-  // iPadOS reports itself as Mac; touch support tells them apart.
-  const isIos = /iPad|iPhone|iPod/.test(ua) || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1);
-  return isIos ? "ios" : "other";
-}
-
-const noopSubscribe = () => () => {};
 
 interface InstallButtonProps {
   className?: string;
@@ -30,7 +20,7 @@ interface InstallButtonProps {
  */
 export function InstallButton({ className, variant = "compact" }: InstallButtonProps) {
   const { installEvent, installed, standalone } = usePwaState();
-  const platform = useSyncExternalStore<Platform | null>(noopSubscribe, detectPlatform, () => null);
+  const platform = usePlatform();
   const [showIosHelp, setShowIosHelp] = useState(false);
   const helpId = useId();
 
