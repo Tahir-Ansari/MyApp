@@ -37,8 +37,9 @@ const assets = [...staticAssets, ...iconAssets, "/manifest.webmanifest"];
 const template = await readFile(path.join(root, "sw", "sw-template.js"), "utf8");
 const output = template
   .replace("__BUILD_ID__", buildId)
-  .replace("__PRECACHE_PAGES__", JSON.stringify(pages))
-  .replace("__PRECACHE_ASSETS__", JSON.stringify(assets));
+  .replace("/* __PRECACHE_PAGES__ */ []", JSON.stringify(pages))
+  .replace("/* __PRECACHE_ASSETS__ */ []", JSON.stringify(assets));
+if (output.includes("__PRECACHE_")) throw new Error("[generate-sw] template placeholders were not replaced");
 await writeFile(path.join(root, "public", "sw.js"), output);
 
 const bytes = (await Promise.all(staticAssets.map((u) => readFile(path.join(nextDir, "static", u.slice("/_next/static/".length))))))

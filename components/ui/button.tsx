@@ -4,16 +4,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-[background-color,border-color,color,transform] duration-150 select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:translate-y-px disabled:pointer-events-none disabled:opacity-45 aria-disabled:pointer-events-none aria-disabled:opacity-45 [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        primary: "bg-accent text-white shadow-sm hover:bg-accent-strong dark:text-[#0b1020]",
-        secondary: "border border-border-strong bg-surface-2 text-foreground hover:bg-surface-3",
+        /* Solid emerald with dark text: the one loud thing on a screen. */
+        primary:
+          "bg-accent text-accent-foreground font-semibold hover:bg-accent-strong active:bg-accent-deep active:text-foreground",
+        /* Dark surface with a subtle border. */
+        secondary:
+          "border border-border bg-surface-2 text-foreground hover:border-accent-border hover:bg-surface-3",
+        /* Tertiary: transparent, muted text. */
         ghost: "text-muted hover:bg-surface-2 hover:text-foreground",
-        outline: "border border-border-strong bg-transparent text-foreground hover:bg-surface-2",
-        success: "bg-success text-[#06251a] hover:opacity-90",
-        danger: "bg-danger text-white hover:opacity-90",
+        outline: "border border-border-strong bg-transparent text-foreground hover:border-accent-border hover:bg-surface-2",
+        success: "border border-accent-border bg-accent-soft text-accent-strong hover:bg-accent/15",
+        /* Restrained destructive styling: tinted, not a red slab. */
+        danger: "border border-danger/30 bg-danger-soft text-danger hover:border-danger/50 hover:bg-danger/15",
       },
       size: {
         sm: "h-8 px-3 text-xs",

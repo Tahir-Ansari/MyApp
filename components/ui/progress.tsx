@@ -5,6 +5,7 @@ interface ProgressBarProps {
   max?: number;
   label: string;
   className?: string;
+  /** accent: emerald fill (default). success: bright green. gradient: deep-to-bright green, for XP. */
   tone?: "accent" | "success" | "gradient";
   size?: "sm" | "md";
 }
@@ -27,7 +28,7 @@ export function ProgressBar({
       aria-valuenow={Math.round(value)}
       className={cn(
         "w-full overflow-hidden rounded-full bg-surface-3",
-        size === "sm" ? "h-1.5" : "h-2.5",
+        size === "sm" ? "h-1" : "h-1.5",
         className,
       )}
     >
@@ -36,7 +37,7 @@ export function ProgressBar({
           "h-full rounded-full transition-[width] duration-700 ease-out",
           tone === "accent" && "bg-accent",
           tone === "success" && "bg-success",
-          tone === "gradient" && "bg-gradient-to-r from-accent to-violet",
+          tone === "gradient" && "bg-gradient-to-r from-accent-deep via-accent to-accent-strong",
         )}
         style={{ width: `${pct}%` }}
       />

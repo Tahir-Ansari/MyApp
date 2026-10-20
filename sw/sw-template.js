@@ -3,9 +3,10 @@
  */
 /* global self, caches, clients */
 
+// Placeholders are filled in by scripts/generate-sw.mjs; the template stays valid JS for linting.
 const VERSION = "__BUILD_ID__";
-const PRECACHE_PAGES = __PRECACHE_PAGES__;
-const PRECACHE_ASSETS = __PRECACHE_ASSETS__;
+const PRECACHE_PAGES = /* __PRECACHE_PAGES__ */ [];
+const PRECACHE_ASSETS = /* __PRECACHE_ASSETS__ */ [];
 
 const PREFIX = "dkq-";
 const PRECACHE = `${PREFIX}precache-${VERSION}`;

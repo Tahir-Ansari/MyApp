@@ -1,10 +1,18 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function Card({
+  className,
+  interactive = false,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & { interactive?: boolean }) {
   return (
     <div
-      className={cn("rounded-xl border border-border bg-surface shadow-card", className)}
+      className={cn(
+        "rounded-xl border border-border bg-surface",
+        interactive && "transition-colors duration-150 hover:border-accent-border",
+        className,
+      )}
       {...props}
     />
   );
@@ -50,7 +58,7 @@ export function PageHeader({
   return (
     <header className="mb-8">
       {eyebrow ? (
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-accent">{eyebrow}</p>
+        <p className="mb-2 font-mono text-xs font-medium uppercase tracking-[0.14em] text-accent-strong">{eyebrow}</p>
       ) : null}
       <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{title}</h1>
       {description ? <p className="mt-2 max-w-2xl text-sm leading-6 text-muted sm:text-base">{description}</p> : null}
@@ -60,5 +68,5 @@ export function PageHeader({
 }
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div aria-hidden className={cn("animate-pulse rounded-lg bg-surface-2", className)} />;
+  return <div aria-hidden className={cn("animate-pulse rounded-lg bg-surface-3", className)} />;
 }

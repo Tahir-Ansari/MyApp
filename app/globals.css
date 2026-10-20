@@ -1,64 +1,59 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
-
-/* Dark is the default theme. Light overrides live under [data-theme="light"]. */
+/*
+ * Design tokens: premium green & black.
+ * Black is the foundation, green is the signature accent, restraint is the rule.
+ * Components use the Tailwind names in @theme below (bg-surface, text-muted, border-border, …);
+ * change a colour here, never in a component.
+ */
 :root {
   color-scheme: dark;
-  --background: #0b1020;
-  --surface: #111833;
-  --surface-2: #172042;
-  --surface-3: #1e2852;
-  --border: #243058;
-  --border-strong: #34427a;
-  --foreground: #e7eaf6;
-  --muted: #9ba4c7;
-  --subtle: #6f79a3;
-  --accent: #7c8cff;
-  --accent-strong: #98a5ff;
-  --accent-soft: rgb(124 140 255 / 0.14);
-  --violet: #a78bfa;
-  --success: #3ecf8e;
-  --success-soft: rgb(62 207 142 / 0.13);
-  --warning: #f5b84d;
-  --warning-soft: rgb(245 184 77 / 0.13);
-  --danger: #f2668b;
-  --danger-soft: rgb(242 102 139 / 0.13);
-  --terminal: #070b17;
-  --terminal-fg: #d7dcf0;
-  --ring: #98a5ff;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.5);
-}
 
-[data-theme="light"] {
-  color-scheme: light;
-  --background: #f5f6fb;
-  --surface: #ffffff;
-  --surface-2: #eef0f8;
-  --surface-3: #e3e7f4;
-  --border: #dbe0ee;
-  --border-strong: #c3cae2;
-  --foreground: #141a33;
-  --muted: #535d82;
-  --subtle: #747ea3;
-  --accent: #4f5fe0;
-  --accent-strong: #3d4cc9;
-  --accent-soft: rgb(79 95 224 / 0.1);
-  --violet: #7c5ce0;
-  --success: #0f8a57;
-  --success-soft: rgb(15 138 87 / 0.1);
-  --warning: #9a5f07;
-  --warning-soft: rgb(196 125 15 / 0.12);
-  --danger: #c22e57;
-  --danger-soft: rgb(194 46 87 / 0.1);
-  --terminal: #0d1328;
-  --terminal-fg: #d7dcf0;
-  --ring: #4f5fe0;
-  --shadow: 0 1px 2px rgb(20 26 51 / 0.06), 0 8px 24px -14px rgb(20 26 51 / 0.18);
+  /* Backgrounds, darkest to lightest */
+  --background: #080b08; /* app canvas */
+  --background-2: #0d120e; /* sidebar, header bars, sunken areas */
+  --surface: #111813; /* cards */
+  --surface-2: #172019; /* elevated: popovers, hover fills, inputs */
+  --surface-3: #1d2820; /* progress tracks, pressed states */
+
+  --border: #253329;
+  --border-strong: #34463a;
+
+  /* Text */
+  --foreground: #f0fdf4;
+  --muted: #a1ada3; /* secondary text */
+  --subtle: #6b776d; /* muted text: meta, placeholders, locked items. Below 4.5:1 — not for body copy */
+
+  /* Brand green */
+  --accent: #22c55e; /* primary actions, active nav, progress fills */
+  --accent-strong: #4ade80; /* hover, key highlights, prompt */
+  --accent-deep: #15803d; /* pressed, borders on accent surfaces */
+  --accent-soft: rgb(34 197 94 / 0.1); /* active nav background, selected rows */
+  --accent-border: rgb(74 222 128 / 0.28); /* hover/selected borders */
+  --accent-foreground: #04160a; /* text on solid green */
+
+  /* Status */
+  --success: #4ade80;
+  --success-soft: rgb(74 222 128 / 0.1);
+  --warning: #fbbf24;
+  --warning-soft: rgb(251 191 36 / 0.1);
+  --danger: #f87171;
+  --danger-soft: rgb(248 113 113 / 0.1);
+
+  /* Terminal */
+  --terminal: #050705;
+  --terminal-fg: #d4ddd6;
+
+  --ring: #4ade80;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -16px rgb(0 0 0 / 0.7);
+  --glow: 0 0 0 1px rgb(74 222 128 / 0.2), 0 0 24px -6px rgb(34 197 94 / 0.35);
+
+  --radius: 0.75rem;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-2: var(--background-2);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-surface-3: var(--surface-3);
@@ -69,8 +64,10 @@
   --color-subtle: var(--subtle);
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
+  --color-accent-deep: var(--accent-deep);
   --color-accent-soft: var(--accent-soft);
-  --color-violet: var(--violet);
+  --color-accent-border: var(--accent-border);
+  --color-accent-foreground: var(--accent-foreground);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
@@ -83,6 +80,7 @@
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   --shadow-card: var(--shadow);
+  --shadow-glow: var(--glow);
 }
 
 @layer base {
@@ -92,6 +90,7 @@
 
   html {
     -webkit-text-size-adjust: 100%;
+    background: var(--background);
   }
 
   body {
@@ -99,6 +98,15 @@
     color: var(--foreground);
     font-family: var(--font-sans);
     font-feature-settings: "cv11", "ss01";
+    line-height: 1.5;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    letter-spacing: -0.015em;
+    text-wrap: balance;
   }
 
   :focus-visible {
@@ -108,23 +116,56 @@
   }
 
   ::selection {
-    background: var(--accent-soft);
+    background: rgb(34 197 94 / 0.28);
+    color: var(--foreground);
+  }
+
+  ::placeholder {
+    color: var(--subtle);
   }
 
   code,
   kbd,
-  pre {
+  pre,
+  samp {
     font-family: var(--font-mono);
   }
 }
 
-/* Inline code inside prose blocks */
-.prose-code code {
-  font-size: 0.875em;
-  padding: 0.1em 0.35em;
-  border-radius: 0.35rem;
-  background: var(--surface-3);
-  color: var(--accent-strong);
+@layer components {
+  /* Subtle green depth for hero areas. Use sparingly: one per page at most. */
+  .bg-hero-glow {
+    background:
+      radial-gradient(60% 80% at 0% 0%, rgb(34 197 94 / 0.09), transparent 60%),
+      radial-gradient(40% 60% at 100% 0%, rgb(21 128 61 / 0.07), transparent 70%),
+      var(--surface);
+  }
+
+  /* Faint grid for technical surfaces (dashboard hero, empty states). */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgb(74 222 128 / 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(74 222 128 / 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* Inline code inside prose blocks */
+  .prose-code code {
+    font-size: 0.875em;
+    padding: 0.1em 0.35em;
+    border-radius: 0.35rem;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--accent-strong);
+  }
+
+  /* Safe-area helpers for standalone PWA mode */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 /* Honour reduced motion both from the OS and the in-app setting. */
@@ -167,6 +208,20 @@ html[data-motion="reduce"] *::after {
 
 .animate-caret {
   animation: caret-blink 1s step-end infinite;
+}
+
+/* Short, single-pulse emphasis for XP gain / level-up. Never loops. */
+@keyframes accent-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(74 222 128 / 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 10px rgb(74 222 128 / 0);
+  }
+}
+
+.animate-accent-pulse {
+  animation: accent-pulse 0.9s ease-out 1;
 }
 
 .scrollbar-thin {
