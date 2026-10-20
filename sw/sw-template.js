@@ -70,6 +70,12 @@ self.addEventListener("message", (event) => {
   if (data.type === "GET_VERSION") event.source?.postMessage({ type: "VERSION", version: VERSION, pages: PRECACHE_PAGES.length });
 });
 
+// Tell open pages a network request failed; navigator.onLine alone misses "connected but no internet".
+async function notifyNetworkFailed() {
+  const windows = await self.clients.matchAll({ type: "window" });
+  windows.forEach((c) => c.postMessage({ type: "NETWORK_FAILED" }));
+}
+
 async function trimRuntime() {
   const cache = await caches.open(RUNTIME);
   const keys = await cache.keys();
@@ -111,6 +117,8 @@ async function handleNavigation(event, url) {
     }
     return res;
   } catch {
+    // Only a real network error means offline; a timeout on a slow network does not.
+    event.waitUntil(network.then(() => {}, () => notifyNetworkFailed()));
     const cached = await matchPage(url);
     if (cached) {
       // Keep the slow network response for the cache if it eventually arrives.
@@ -140,7 +148,10 @@ async function staleWhileRevalidate(event) {
       if (res.ok) await (await caches.open(RUNTIME)).put(event.request, res.clone());
       return res;
     })
-    .catch(() => undefined);
+    .catch(() => {
+      event.waitUntil(notifyNetworkFailed());
+      return undefined;
+    });
   if (cached) {
     event.waitUntil(network);
     return cached;

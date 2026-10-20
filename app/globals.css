@@ -1,26 +1,175 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Dark is the default theme. Light overrides live under [data-theme="light"]. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+  --background: #0b1020;
+  --surface: #111833;
+  --surface-2: #172042;
+  --surface-3: #1e2852;
+  --border: #243058;
+  --border-strong: #34427a;
+  --foreground: #e7eaf6;
+  --muted: #9ba4c7;
+  --subtle: #6f79a3;
+  --accent: #7c8cff;
+  --accent-strong: #98a5ff;
+  --accent-soft: rgb(124 140 255 / 0.14);
+  --violet: #a78bfa;
+  --success: #3ecf8e;
+  --success-soft: rgb(62 207 142 / 0.13);
+  --warning: #f5b84d;
+  --warning-soft: rgb(245 184 77 / 0.13);
+  --danger: #f2668b;
+  --danger-soft: rgb(242 102 139 / 0.13);
+  --terminal: #070b17;
+  --terminal-fg: #d7dcf0;
+  --ring: #98a5ff;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.5);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --background: #f5f6fb;
+  --surface: #ffffff;
+  --surface-2: #eef0f8;
+  --surface-3: #e3e7f4;
+  --border: #dbe0ee;
+  --border-strong: #c3cae2;
+  --foreground: #141a33;
+  --muted: #535d82;
+  --subtle: #747ea3;
+  --accent: #4f5fe0;
+  --accent-strong: #3d4cc9;
+  --accent-soft: rgb(79 95 224 / 0.1);
+  --violet: #7c5ce0;
+  --success: #0f8a57;
+  --success-soft: rgb(15 138 87 / 0.1);
+  --warning: #9a5f07;
+  --warning-soft: rgb(196 125 15 / 0.12);
+  --danger: #c22e57;
+  --danger-soft: rgb(194 46 87 / 0.1);
+  --terminal: #0d1328;
+  --terminal-fg: #d7dcf0;
+  --ring: #4f5fe0;
+  --shadow: 0 1px 2px rgb(20 26 51 / 0.06), 0 8px 24px -14px rgb(20 26 51 / 0.18);
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-violet: var(--violet);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-terminal: var(--terminal);
+  --color-terminal-fg: var(--terminal-fg);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --shadow-card: var(--shadow);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+  }
+
+  code,
+  kbd,
+  pre {
+    font-family: var(--font-mono);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Inline code inside prose blocks */
+.prose-code code {
+  font-size: 0.875em;
+  padding: 0.1em 0.35em;
+  border-radius: 0.35rem;
+  background: var(--surface-3);
+  color: var(--accent-strong);
+}
+
+/* Honour reduced motion both from the OS and the in-app setting. */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion="full"]) *,
+  html:not([data-motion="full"]) *::before,
+  html:not([data-motion="full"]) *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html[data-motion="reduce"] *,
+html[data-motion="reduce"] *::before,
+html[data-motion="reduce"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.animate-flow {
+  stroke-dasharray: 6 4;
+  animation: flow-dash 1.2s linear infinite;
+}
+
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.animate-caret {
+  animation: caret-blink 1s step-end infinite;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
 }
