@@ -37,7 +37,7 @@ export const CHALLENGES: Challenge[] = [
         mode: "docker",
         scenario: "docker-mixed",
         steps: [
-          { id: "ps", instruction: "List running containers.", hint: "Type: docker ps", goal: { kind: "command", pattern: "^docker (container )?(ps|ls|list)\\b" } },
+          { id: "ps", instruction: "List running containers.", hint: "docker ps",goal: { kind: "command", pattern: "^docker (container )?(ps|ls|list)\\b" } },
         ],
         explanation: "`docker ps` shows running containers with their published ports. Stopped containers are hidden unless you add -a.",
       },
