@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { ArrowRight, Award, Box, Clock, Lock, Ship, Sparkles } from "lucide-react";
 import { ChallengeRunner } from "@/components/challenges/challenge-runner";
 import { Badge } from "@/components/ui/badge";
@@ -146,7 +147,8 @@ function PathCard({ track, progress }: { track: TrackId; progress: ProgressState
 }
 
 function QuickPractice({ progress }: { progress: ProgressState }) {
-  const id = QUICK_PRACTICE_IDS.find((c) => progress.challenges[c]?.status !== "completed") ?? QUICK_PRACTICE_IDS[0];
+  // Pick once per visit so finishing a challenge shows its result instead of jumping to the next one.
+  const [id] = useState(() => QUICK_PRACTICE_IDS.find((c) => progress.challenges[c]?.status !== "completed") ?? QUICK_PRACTICE_IDS[0]);
   const challenge = getChallenge(id)!;
   return (
     <Card className="p-4 sm:p-5">

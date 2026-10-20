@@ -1,4 +1,4 @@
-import { Box, Check, Cpu, Database, FileCode2, FileText, HardDrive, Layers, Network, Server, X } from "lucide-react";
+import { Box, Check, Cpu, Database, FileCode2, FileText, HardDrive, Layers, Network, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Flow, FlowArrow, Group, Node } from "./primitives";
 
@@ -408,8 +408,4 @@ export function PodStates() {
       </div>
     </div>
   );
-}
-
-export function ServerIcon() {
-  return <Server aria-hidden />;
 }
