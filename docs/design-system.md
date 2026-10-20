@@ -109,7 +109,12 @@ lucide-react only. `size-4` inline, `size-5` nav, `size-6` feature tiles. Active
 - Group labels: `px-3 pt-4 pb-1 font-mono text-[11px] uppercase tracking-[0.14em] text-subtle` (Learn / Practice / You).
 - Footer: `text-xs text-subtle` "Progress saved on this device" with lucide `HardDrive`.
 
-**Mobile (< lg):** sticky top bar (`h-14 bg-background-2/90 backdrop-blur border-b pt-safe`: logo + menu button → drawer with the full nav) **and** a bottom nav (`h-16 bg-background-2 border-t pb-safe`, 4–5 items, icon + label `text-[11px]`, active `text-accent-strong` with a 2px top indicator). Content gets `pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0`. Toasts/banners sit above the bottom nav: `bottom-[calc(4.5rem+env(safe-area-inset-bottom))] lg:bottom-4`.
+**Mobile (< lg):** sticky top bar (`h-14 bg-background-2/90 backdrop-blur border-b pt-safe`: logo + menu button → drawer with the full nav) **and** a bottom nav (`h-16 bg-background-2 border-t pb-safe`, 4–5 items, icon + label `text-[11px]`, active `text-accent-strong` with a 2px top indicator). Content gets `pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0`.
+
+**Floating notices: two regions, never overlapping:**
+- *Feedback toasts* (XP gained, saved, copied) come from `components/layout/toaster.tsx`: above the bottom nav on phones (`bottom-[calc(4.5rem+env(safe-area-inset-bottom))]`), bottom-right on lg. Short-lived (~2.5s).
+- *System notices* (offline / back online, update ready, offline-ready) come from `components/pwa/pwa-root.tsx`: just under the mobile top bar (`top-[calc(3.5rem+env(safe-area-inset-top)+0.5rem)]`, `z-[45]`, below the top bar and drawer), bottom-left beside the sidebar on lg. Any notice that can persist **must be dismissible** so it never permanently covers content on phones.
+- Both use `rounded-xl border bg-surface-2 shadow-card`, status icon + text, `role="status"`.
 
 **Main area:** `mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-10 py-6 sm:py-10`, `id="main"` for the skip link.
 
@@ -169,7 +174,7 @@ Options are real `<button>`/`<input>` elements, keyboard operable, with `aria-pr
 
 ### PWA, offline, errors
 - `theme_color` / `background_color` / `viewport.themeColor`: **`#080B08`**. Status bar: `black-translucent`, with `.pt-safe` on the top bar.
-- Offline banner: `bg-surface-2 border border-warning/30 text-foreground`, `WifiOff` in `text-warning`, text "Offline. Saved lessons still work…". Online-again: `Wifi` in `text-success`. Never color-only.
+- Offline banner: `bg-surface-2 border border-warning/30 text-foreground`, `WifiOff` in `text-warning`, text "Offline. Saved lessons still work…", with a ghost `X` dismiss button (`aria-label="Dismiss offline notice"`, 44px target). Online-again: `Wifi` in `text-success`, auto-hides. Never color-only.
 - Offline page and 404/error: on-canvas (no hero glow), mono eyebrow (`Offline` in `text-warning`, `404` in `text-accent-strong`, `Error` in `text-danger`), h1, muted copy, `primary` + `secondary` actions, and saved pages in one `Card` with `divide-y` rows.
 - Icons/splash: green-on-black mark that matches the sidebar logo.
 

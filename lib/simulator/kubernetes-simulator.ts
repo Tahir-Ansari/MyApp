@@ -108,6 +108,7 @@ interface ImageBehavior {
 
 const KNOWN_IMAGES: Record<string, ImageBehavior> = {
   "nginx:1.27": { logs: NGINX_LOGS },
+  "nginx:1.28": { logs: NGINX_LOGS.map((l) => l.replace("1.27.2", "1.28.0")) },
   "nginx:1.26": { logs: NGINX_LOGS.map((l) => l.replace("1.27.2", "1.26.2")) },
   "nginx:latest": { logs: NGINX_LOGS },
   "redis:7": { logs: ["1:M Server initialized", "1:M Ready to accept connections tcp"] },
